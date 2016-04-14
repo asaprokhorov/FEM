@@ -59,24 +59,23 @@ def draw(state, func, a, b):
 
 def h_adaptive_LSM(f, nodes, basis, accuracy, states):
     un = LSM(f, nodes, basis)
+    common_error = error(f, un, nodes[0], nodes[-1]) /  norm(f, nodes[0], nodes[-1])
     size = len(nodes)
-    common_error = error(f, un, nodes[0], nodes[-1])
-    errors = [error(f, un, nodes[i], nodes[i+1]) for i in range(size - 1)]
-    error_average = numpy.sqrt(sum(errors))
     state = State(size, common_error, un, nodes)
     states.append(state)
-    draw(state, f, nodes[0], nodes[-1])
-    print("points:{0}\terror:{1}".format(size, common_error))
+    if common_error < accuracy:
+        return un
+    errors = [error(f, un, nodes[i], nodes[i + 1]) for i in range(size - 1)]
+    error_average = 0
+    for i in range(len(errors)):
+        error_average += errors[i] ** 2
+    error_average = numpy.sqrt(error_average / len(errors))
+    max_error = max(errors)
+    print("points:{0}\terror:{1}\taverage:{2}\tmax:{3}".format(size, common_error, error_average, max_error))
     new_nodes = []
-    needs_repeat = False
     for i in range(size - 1):
         new_nodes.append(nodes[i])
-        err = error(f, un, nodes[i], nodes[i + 1])
-        if err > accuracy:
+        if errors[i] / error_average >  1 + accuracy:
             new_nodes.append(nodes[i] + (nodes[i + 1] - nodes[i]) / 2)
-            needs_repeat = True
     new_nodes.append(nodes[-1])
-    if needs_repeat:
-        return h_adaptive_LSM(f, new_nodes, create_basis(new_nodes), accuracy, states)
-    else:
-        return un
+    return h_adaptive_LSM(f, new_nodes, create_basis(new_nodes), accuracy, states)
