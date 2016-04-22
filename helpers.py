@@ -45,3 +45,38 @@ def create_basis(nodes):
     for i in range(size):
         basis.append(create_single_courant_basis(i, nodes))
     return basis
+
+
+
+
+def create_single_bubble_basis(i, nodes):
+    def bubble(x, i, nodes):
+        x_left = nodes[i]
+        x_right = nodes[i+1]
+        x_i = (nodes[i] + nodes[i+1]) / 2
+        if x_left < x <= x_i:
+            return (x - x_left) / (x_i - x_left)
+        elif x_i < x < x_right:
+            return (x_right - x) / (x_right - x_i)
+        else:
+            return 0
+
+    def bubble_derivative(x, i, nodes):
+        x_left = nodes[i]
+        x_right = nodes[i+1]
+        x_i = (nodes[i] + nodes[i+1]) / 2
+        if x_left < x <= x_i:
+            return 1. / (x_i - x_left)
+        elif x_i < x < x_right:
+            return -1. / (x_right - x_i)
+        else:
+            return 0
+    return lambda x, derivative=False: bubble(x, i, nodes) if not derivative else bubble_derivative(x, i, nodes)
+
+
+def create_bubble_basis(nodes):
+    size = len(nodes)
+    basis = []
+    for i in range(size):
+        basis.append(create_single_bubble_basis(i, nodes))
+    return basis
