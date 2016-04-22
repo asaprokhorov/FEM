@@ -14,12 +14,7 @@ def error(f, u, a, b):
     return norm(lambda x: f(x) - u(x), a, b)
 
 
-def create_single_basis(i, nodes):
-    return lambda x: x**i
-
-
 def create_single_courant_basis(i, nodes):
-
     def courant(x, i, nodes):
         x_i = nodes[i]
         x_left = nodes[i-1] if i > 0 else nodes[0] - (nodes[1] - nodes[0])
@@ -30,8 +25,18 @@ def create_single_courant_basis(i, nodes):
             return (x_right - x) / (x_right - x_i)
         else:
             return 0
-    return lambda x: courant(x, i, nodes)
 
+    def courant_derivative(x, i, nodes):
+        x_i = nodes[i]
+        x_left = nodes[i-1] if i > 0 else nodes[0] - (nodes[1] - nodes[0])
+        x_right = nodes[i+1] if i < len(nodes) - 1 else nodes[-1] + (nodes[-1] - nodes[-2])
+        if x_left < x <= x_i:
+            return 1. / (x_i - x_left)
+        elif x_i < x < x_right:
+            return -1. / (x_right - x_i)
+        else:
+            return 0
+    return lambda x, derivative=False: courant(x, i, nodes) if not derivative else courant_derivative(x, i, nodes)
 
 
 def create_basis(nodes):
