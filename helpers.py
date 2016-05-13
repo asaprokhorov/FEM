@@ -1,5 +1,6 @@
 import numpy
 import scipy.integrate as integrate
+from scipy.misc import derivative
 
 
 def scalar_product(u, v, a, b):
@@ -8,6 +9,9 @@ def scalar_product(u, v, a, b):
 
 def norm(f, a, b):
     return numpy.sqrt(scalar_product(f, f, a, b))
+
+def derivative_norm(f, a, b):
+    return numpy.sqrt(integrate.quad(lambda x: derivative(f, x, dx=1e-6) ** 2, a, b)[0])
 
 
 def error(f, u, a, b):
