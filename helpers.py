@@ -3,7 +3,7 @@ import scipy.integrate as integrate
 
 
 def scalar_product(u, v, a, b):
-    return integrate.quad(lambda x: numpy.float64(u(x) * v(x)), a, b, epsabs=1e-9, epsrel=1e-9)[0]
+    return integrate.quad(lambda x: numpy.float64(u(x) * v(x)), a, b)[0]
 
 
 def norm(f, a, b):
@@ -75,7 +75,7 @@ def create_single_bubble_basis(i, nodes):
 
 
 def create_bubble_basis(nodes):
-    size = len(nodes)
+    size = len(nodes) - 1
     basis = []
     for i in range(size):
         basis.append(create_single_bubble_basis(i, nodes))

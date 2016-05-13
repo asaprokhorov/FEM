@@ -75,6 +75,7 @@ def h_adaptive_LSM(f, nodes, basis, accuracy, states):
     new_nodes = []
     for i in range(size - 1):
         new_nodes.append(nodes[i])
+        print(errors[i] / error_average)
         if errors[i] / error_average >  1 + accuracy:
             new_nodes.append(nodes[i] + (nodes[i + 1] - nodes[i]) / 2)
     new_nodes.append(nodes[-1])

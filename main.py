@@ -43,6 +43,4 @@ def draw(row):
     plt.plot(xs, ys, 'b', xs, yf, 'g--', nodes, nodes_y, 'b^', nodes, nodes_0, 'r^')
     h = nodes[-1] - nodes[0]
     plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
     plt.show()
