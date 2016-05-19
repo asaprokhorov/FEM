@@ -3,6 +3,20 @@ from scipy.misc import derivative
 import scipy.integrate as integrate
 import numpy
 from matplotlib import pyplot as plt
+import sys
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore
+
+
+class State:
+    def __init__(self, norm_u, derivative_norm_u, size, error, func, nodes):
+        self.size = size
+        self.norm_u = norm_u
+        self.derivative_norm_u = derivative_norm_u
+        self.error = error
+        self.function = func
+        self.nodes = nodes
+
 
 
 def fem(f, p, q, r, alpha, beta, A, B, basis, nodes):
@@ -33,11 +47,10 @@ def fem(f, p, q, r, alpha, beta, A, B, basis, nodes):
     return lambda x: create_function(x, solution)
 
 
-def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy):
+def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states):
     solution = fem(f, p, q, r, alpha, beta, A, B, basis, nodes)
     size = len(nodes) - 1
-    # plt.plot(nodes, [solution(nodes[i]) for i in range(size + 1)], 'go--')
-    # plt.show()
+
     bubble_basis = create_bubble_basis(nodes)
     coefficients = []
     for i in range(size):
@@ -65,32 +78,32 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy):
         f_i += p(nodes[-1]) * bubble_basis[i](nodes[-1]) * derivative(solution, nodes[-1], dx=1e-6)
         f_i -= p(nodes[0]) * bubble_basis[i](nodes[0]) * derivative(solution, nodes[0], dx=1e-6)
         coefficients.append(f_i / e_i)
-    eh = [coefficients[i] ** 2 * integrate.quad(lambda x: bubble_basis[i](x) ** 2, nodes[i], nodes[i + 1])[0]
-          for i in range(size)]
+    eh = [coefficients[i] ** 2 * derivative_norm(bubble_basis[i], nodes[i], nodes[i + 1]) ** 2 for i in range(size)]
     e_average = sum(eh)
     uh_average = sum([derivative_norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
-
+    uh_l = sum([norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
     new_nodes = []
     needs_repeat = False
     for i in range(size):
         new_nodes.append(nodes[i])
         deviation = numpy.sqrt(size * eh[i] / (e_average + uh_average))
-        print(deviation)
         if deviation > accuracy:
             new_nodes.append((nodes[i] + nodes[i + 1]) / 2)
             needs_repeat = True
     new_nodes.append(nodes[-1])
+    state = State(len(nodes), numpy.sqrt(uh_l), numpy.sqrt(uh_average), e_average, solution, nodes)
+    states.append(state)
     print("average:{0}\t size:{1}".format(e_average, size))
     if needs_repeat:
         new_basis = create_basis(new_nodes)
-        return h_adaptive_fem(f, p, q, r, alpha, beta, A, B, new_basis, new_nodes, accuracy)
+        return h_adaptive_fem(f, p, q, r, alpha, beta, A, B, new_basis, new_nodes, accuracy, states)
     else:
         return solution
 
 
 p = lambda x: 1
-q = lambda x: 10 ** 3 * (1 - x ** 7)
-r = lambda x: -10 ** 3
+q = lambda x: 10**3 * (1 - x ** 7)
+r = lambda x: -10**3
 alpha = 10 ** 12
 beta = 10 ** 12
 a = -1
@@ -117,14 +130,62 @@ def func(x):
 # def func(x):
 #     return 100
 
-nodes = numpy.linspace(a, b, 10, endpoint=True)
+nodes = numpy.linspace(a, b, 3, endpoint=True)
 
 basis = create_basis(nodes)
 
-s = h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1)
+states = []
 
-xs = numpy.linspace(a, b, 100, endpoint=True)
+s = h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
+#
+# xs = numpy.linspace(a, b, 1000, endpoint=True)
+#
+# ys = [s(i) for i in xs]
+#
+# plt.plot(xs, ys)
+# plt.show()
 
-ys = [s(i) for i in xs]
-plt.plot(xs, ys)
-plt.show()
+def draw(row):
+    xs = []
+    ys = []
+
+    nodes = states[row.row()].nodes
+    un = states[row.row()].function
+    size = states[row.row()].size
+    nodes_0 = [0 for i in range(size)]
+    nodes_y = [un(nodes[i]) for i in range(size)]
+
+    yf = []
+    size = 1000
+    h = (b - a) / size
+    for i in range(size + 1):
+        x = a + h * i
+        xs.append(x)
+        ys.append(un(x))
+        yf.append(func(x))
+    plt.plot(xs, ys, 'b', xs, yf, 'g--', nodes, nodes_y, 'b^', nodes, nodes_0, 'r^')
+    h = nodes[-1] - nodes[0]
+    plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
+    figManager = plt.get_current_fig_manager()
+    figManager.window.showMaximized()
+    plt.show()
+
+# ui pyqt
+app = QApplication(sys.argv)
+
+listView = QTableWidget()
+listView.setRowCount(len(states))
+listView.setColumnCount(4)
+listView.setHorizontalHeaderItem(0, QTableWidgetItem("Size"))
+listView.setHorizontalHeaderItem(1, QTableWidgetItem("Uh_L"))
+listView.setHorizontalHeaderItem(2, QTableWidgetItem("Uh_H"))
+listView.setHorizontalHeaderItem(3, QTableWidgetItem("Error"))
+for i in range(len(states)):
+    listView.setItem(i, 0, QTableWidgetItem("{0}".format(states[i].size)))
+    listView.setItem(i, 1, QTableWidgetItem("{0}".format(states[i].norm_u)))
+    listView.setItem(i, 2, QTableWidgetItem("{0}".format(states[i].derivative_norm_u)))
+    listView.setItem(i, 3, QTableWidgetItem("{0:.5} %".format(states[i].error * 100)))
+listView.doubleClicked.connect(draw)
+listView.setWindowState(QtCore.Qt.WindowMaximized)
+listView.show()
+sys.exit(app.exec_())
