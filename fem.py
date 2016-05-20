@@ -9,7 +9,7 @@ from PyQt5 import QtCore
 
 
 class State:
-    def __init__(self, norm_u, derivative_norm_u, size, error, func, nodes):
+    def __init__(self, size, norm_u, derivative_norm_u, error, func, nodes):
         self.size = size
         self.norm_u = norm_u
         self.derivative_norm_u = derivative_norm_u
@@ -101,34 +101,34 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states
         return solution
 
 
-p = lambda x: 1
-q = lambda x: 10**3 * (1 - x ** 7)
-r = lambda x: -10**3
-alpha = 10 ** 12
-beta = 10 ** 12
-a = -1
-b = 1
-A = 0
-B = 0
-
-
-def func(x):
-    return 1000
-
-
 # p = lambda x: 1
-# q = lambda x: 20
-# r = lambda x: 0
+# q = lambda x: 10**3 * (1 - x ** 7)
+# r = lambda x: -10**3
 # alpha = 10 ** 12
 # beta = 10 ** 12
-# a = 0
-# b = 5
+# a = -1
+# b = 1
 # A = 0
 # B = 0
 #
 #
 # def func(x):
-#     return 100
+#     return 1000
+
+
+p = lambda x: 1
+q = lambda x: 20
+r = lambda x: 0
+alpha = 10 ** 12
+beta = 10 ** 12
+a = 0
+b = 5
+A = 0
+B = 0
+
+
+def func(x):
+    return 100
 
 nodes = numpy.linspace(a, b, 3, endpoint=True)
 
@@ -165,9 +165,6 @@ def draw(row):
         yf.append(func(x))
     plt.plot(xs, ys, 'b', xs, yf, 'g--', nodes, nodes_y, 'b^', nodes, nodes_0, 'r^')
     h = nodes[-1] - nodes[0]
-    plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
     plt.show()
 
 # ui pyqt
@@ -182,9 +179,9 @@ listView.setHorizontalHeaderItem(2, QTableWidgetItem("Uh_H"))
 listView.setHorizontalHeaderItem(3, QTableWidgetItem("Error"))
 for i in range(len(states)):
     listView.setItem(i, 0, QTableWidgetItem("{0}".format(states[i].size)))
-    listView.setItem(i, 1, QTableWidgetItem("{0}".format(states[i].norm_u)))
-    listView.setItem(i, 2, QTableWidgetItem("{0}".format(states[i].derivative_norm_u)))
-    listView.setItem(i, 3, QTableWidgetItem("{0:.5} %".format(states[i].error * 100)))
+    listView.setItem(i, 1, QTableWidgetItem("{0:.5}".format(states[i].norm_u)))
+    listView.setItem(i, 2, QTableWidgetItem("{0:.5}".format(states[i].derivative_norm_u)))
+    listView.setItem(i, 3, QTableWidgetItem("{0:.5} %".format(states[i].error)))
 listView.doubleClicked.connect(draw)
 listView.setWindowState(QtCore.Qt.WindowMaximized)
 listView.show()
