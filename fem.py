@@ -9,11 +9,12 @@ from PyQt5 import QtCore
 
 
 class State:
-    def __init__(self, size, norm_u, derivative_norm_u, error, func, nodes):
+    def __init__(self, size, norm_u, e_l, derivative_norm_u, e_h, func, nodes):
         self.size = size
         self.norm_u = norm_u
+        self.e_l = e_l
         self.derivative_norm_u = derivative_norm_u
-        self.error = error
+        self.e_h = e_h
         self.function = func
         self.nodes = nodes
 
@@ -79,19 +80,20 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states
         f_i -= p(nodes[0]) * bubble_basis[i](nodes[0]) * derivative(solution, nodes[0], dx=1e-6)
         coefficients.append(f_i / e_i)
     eh = [coefficients[i] ** 2 * derivative_norm(bubble_basis[i], nodes[i], nodes[i + 1]) ** 2 for i in range(size)]
+    el = [coefficients[i] ** 2 * norm(bubble_basis[i], nodes[i], nodes[i + 1]) ** 2 for i in range(size)]
     e_average = sum(eh)
-    uh_average = sum([derivative_norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
+    uh_h = sum([derivative_norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
     uh_l = sum([norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
     new_nodes = []
     needs_repeat = False
     for i in range(size):
         new_nodes.append(nodes[i])
-        deviation = numpy.sqrt(size * eh[i] / (e_average + uh_average))
+        deviation = numpy.sqrt(size * eh[i] / (sum(eh) + uh_h))
         if deviation > accuracy:
             new_nodes.append((nodes[i] + nodes[i + 1]) / 2)
             needs_repeat = True
     new_nodes.append(nodes[-1])
-    state = State(len(nodes), numpy.sqrt(uh_l), numpy.sqrt(uh_average), e_average, solution, nodes)
+    state = State(len(nodes), numpy.sqrt(uh_l), numpy.sqrt(uh_l + sum(el)), numpy.sqrt(uh_h), numpy.sqrt(uh_h + sum(eh)), solution, nodes)
     states.append(state)
     print("average:{0}\t size:{1}".format(e_average, size))
     if needs_repeat:
@@ -170,16 +172,18 @@ app = QApplication(sys.argv)
 
 listView = QTableWidget()
 listView.setRowCount(len(states))
-listView.setColumnCount(4)
+listView.setColumnCount(5)
 listView.setHorizontalHeaderItem(0, QTableWidgetItem("Size"))
 listView.setHorizontalHeaderItem(1, QTableWidgetItem("Uh_L"))
-listView.setHorizontalHeaderItem(2, QTableWidgetItem("Uh_H"))
-listView.setHorizontalHeaderItem(3, QTableWidgetItem("Error"))
+listView.setHorizontalHeaderItem(2, QTableWidgetItem("e_L"))
+listView.setHorizontalHeaderItem(3, QTableWidgetItem("Uh_H"))
+listView.setHorizontalHeaderItem(4, QTableWidgetItem("e_H"))
 for i in range(len(states)):
     listView.setItem(i, 0, QTableWidgetItem("{0}".format(states[i].size)))
     listView.setItem(i, 1, QTableWidgetItem("{0:.5}".format(states[i].norm_u)))
-    listView.setItem(i, 2, QTableWidgetItem("{0:.5}".format(states[i].derivative_norm_u)))
-    listView.setItem(i, 3, QTableWidgetItem("{0:.5} %".format(states[i].error)))
+    listView.setItem(i, 2, QTableWidgetItem("{0:.5}".format(states[i].e_l)))
+    listView.setItem(i, 3, QTableWidgetItem("{0:.5}".format(states[i].derivative_norm_u)))
+    listView.setItem(i, 4, QTableWidgetItem("{0:.5}".format(states[i].e_h)))
 listView.doubleClicked.connect(draw)
 listView.setWindowState(QtCore.Qt.WindowMaximized)
 listView.show()
