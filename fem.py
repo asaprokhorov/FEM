@@ -137,13 +137,9 @@ basis = create_basis(nodes)
 states = []
 
 s = h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
-#
-# xs = numpy.linspace(a, b, 1000, endpoint=True)
-#
-# ys = [s(i) for i in xs]
-#
-# plt.plot(xs, ys)
-# plt.show()
+
+def u_real(x):
+    return 5 * (x * numpy.exp(100) - x - 5 * numpy.exp(20*x) + 5) / (numpy.exp(100)-1)
 
 def draw(row):
     xs = []
@@ -162,8 +158,10 @@ def draw(row):
         x = a + h * i
         xs.append(x)
         ys.append(un(x))
-        yf.append(func(x))
-    plt.plot(xs, ys, 'b', xs, yf, 'g--', nodes, nodes_y, 'b^', nodes, nodes_0, 'r^')
+        yf.append(u_real(x))
+    plt.plot(xs, ys, 'b', xs, yf, 'g--', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
+    h = nodes[-1] - nodes[0]
+    plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
     h = nodes[-1] - nodes[0]
     plt.show()
 
