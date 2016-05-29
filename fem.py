@@ -187,8 +187,8 @@ basis = create_basis(nodes)
 
 states = []
 
-h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
-# even_fem(func, p, q, r, alpha, beta, A, B, a, b, states)
+# h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
+even_fem(func, p, q, r, alpha, beta, A, B, a, b, states)
 
 def draw(row):
     xs = []
@@ -226,6 +226,12 @@ listView.setHorizontalHeaderItem(5, QTableWidgetItem("Uh_H"))
 listView.setHorizontalHeaderItem(6, QTableWidgetItem("e_H"))
 listView.setHorizontalHeaderItem(7, QTableWidgetItem("||e||H / ||uh||H %"))
 listView.setHorizontalHeaderItem(8, QTableWidgetItem("pH"))
+print("""
+\\begin{table}[H]
+\\centering
+\\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\\hline
+N   & $||u_h||_L$ & $||e_h||_L$ & $\\frac{||e_h||_L}{||u_h||_L}, \\%$ & $||u_h||_H$ & $||e_h||_H$ & $\\frac{||e_h||_H}{||u_h||_H}, \\%$ & $p_H$   \\\\ \\hline""")
 listView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 for i in range(len(states)):
     listView.setItem(i, 0, QTableWidgetItem("{0}".format(states[i].size)))
@@ -244,8 +250,14 @@ for i in range(len(states)):
         # p_l = numpy.log(states[i].e_l - states[i - 1].e_l) / numpy.log(states[i].size - states[i - 1].size)
         p_h = numpy.log(states[i - 1].e_h / states[i].e_h) / numpy.log(states[i].size / states[i - 1].size)
         p_l = numpy.log(states[i - 1].e_l / states[i].e_l) / numpy.log(states[i].size / states[i - 1].size)
+    print("{0}  & {1:.5} & {2:.5} & {3:.5} & {4:.5} & {5:.5} & {6:.5} & \\\\ \\hline".format(states[i].size, states[i].norm_u, states[i].e_l, states[i].e_l / states[i].norm_u * 100, states[i].derivative_norm_u, states[i].e_h, states[i].e_h / states[i].derivative_norm_u * 100, p_h))
     listView.setItem(i, 8, QTableWidgetItem("{0:.5}".format(p_h)))
     listView.setItem(i, 4, QTableWidgetItem("{0:.5}".format(p_l)))
+print("""
+\\end{tabular}
+\\caption{Характеристики апроксимацiї на рівномірній сiтцi.}
+\\end{table}
+""")
 listView.doubleClicked.connect(draw)
 listView.setWindowState(QtCore.Qt.WindowMaximized)
 listView.show()
