@@ -48,10 +48,8 @@ def fem(f, p, q, r, alpha, beta, A, B, basis, nodes):
     return lambda x: create_function(x, solution)
 
 
-def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states):
-    solution = fem(f, p, q, r, alpha, beta, A, B, basis, nodes)
+def calculate_errors(nodes, solution, f):
     size = len(nodes) - 1
-
     bubble_basis = create_bubble_basis(nodes)
     coefficients = []
     for i in range(size):
@@ -81,9 +79,16 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states
         coefficients.append(f_i / e_i)
     eh = [coefficients[i] ** 2 * derivative_norm(bubble_basis[i], nodes[i], nodes[i + 1]) ** 2 for i in range(size)]
     el = [coefficients[i] ** 2 * norm(bubble_basis[i], nodes[i], nodes[i + 1]) ** 2 for i in range(size)]
-    e_average = sum(eh)
     uh_h = sum([derivative_norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
     uh_l = sum([norm(solution, nodes[i], nodes[i + 1]) ** 2 for i in range(size)])
+    return eh, el, uh_h, uh_l
+
+
+def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states):
+    solution = fem(f, p, q, r, alpha, beta, A, B, basis, nodes)
+    size = len(nodes) - 1
+
+    eh, el, uh_h, uh_l = calculate_errors(nodes, solution, f)
     new_nodes = []
     needs_repeat = False
     for i in range(size):
@@ -95,7 +100,7 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states
     new_nodes.append(nodes[-1])
     state = State(len(nodes), numpy.sqrt(uh_l), numpy.sqrt(sum(el)), numpy.sqrt(uh_h), numpy.sqrt(sum(eh)), solution, nodes)
     states.append(state)
-    print("average:{0}\t size:{1}".format(e_average, size))
+    print("size:{0}".format(size + 1))
     if needs_repeat:
         new_basis = create_basis(new_nodes)
         return h_adaptive_fem(f, p, q, r, alpha, beta, A, B, new_basis, new_nodes, accuracy, states)
@@ -103,12 +108,71 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states
         return solution
 
 
+def even_fem(f, p, q, r, alpha, beta, A, B, a, b, states):
+    for i in range(5):
+        nodes = numpy.linspace(a, b, 10 * 2 ** i, endpoint=True)
+        basis = create_basis(nodes)
+        solution = fem(f, p, q, r, alpha, beta, A, B, basis, nodes)
+        size = len(nodes) - 1
+
+        eh, el, uh_h, uh_l = calculate_errors(nodes, solution, f)
+        state = State(len(nodes), numpy.sqrt(uh_l), numpy.sqrt(sum(el)), numpy.sqrt(uh_h), numpy.sqrt(sum(eh)), solution, nodes)
+        states.append(state)
+        print("size:{0}".format(size + 1))
+
+
+#good
+p = lambda x: 1
+q = lambda x: 10**3 * (1 - x ** 7)
+r = lambda x: -10**3
+alpha = 10 ** 12
+beta = 10 ** 12
+a = -1
+b = 1
+A = 0
+B = 0
+
+
+def func(x):
+    return 1000
+
+#good
 # p = lambda x: 1
-# q = lambda x: 10**3 * (1 - x ** 7)
-# r = lambda x: -10**3
+# q = lambda x: 20
+# r = lambda x: 0
 # alpha = 10 ** 12
 # beta = 10 ** 12
-# a = -1
+# a = 0
+# b = 5
+# A = 0
+# B = 0
+#
+#
+# def func(x):
+#     return 100
+
+#good
+
+# p = lambda x: 1
+# q = lambda x: 3000 * (2/3 - x)
+# r = lambda x: 0
+# alpha = 10 ** 12
+# beta = 10 ** 12
+# a = 0
+# b = 1
+# A = 0
+# B = 0
+#
+#
+# def func(x):
+#     return 3000
+
+# p = lambda x: 1
+# q = lambda x: numpy.exp(6*x)
+# r = lambda x: 0
+# alpha = 10 ** 12
+# beta = 10 ** 12
+# a = 0
 # b = 1
 # A = 0
 # B = 0
@@ -117,31 +181,14 @@ def h_adaptive_fem(f, p, q, r, alpha, beta, A, B, basis, nodes, accuracy, states
 # def func(x):
 #     return 1000
 
-
-p = lambda x: 1
-q = lambda x: 20
-r = lambda x: 0
-alpha = 10 ** 12
-beta = 10 ** 12
-a = 0
-b = 5
-A = 0
-B = 0
-
-
-def func(x):
-    return 100
-
 nodes = numpy.linspace(a, b, 3, endpoint=True)
 
 basis = create_basis(nodes)
 
 states = []
 
-s = h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
-
-def u_real(x):
-    return 5 * (x * numpy.exp(100) - x - 5 * numpy.exp(20*x) + 5) / (numpy.exp(100)-1)
+h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
+# even_fem(func, p, q, r, alpha, beta, A, B, a, b, states)
 
 def draw(row):
     xs = []
@@ -152,16 +199,13 @@ def draw(row):
     size = states[row.row()].size
     nodes_0 = [0 for i in range(size)]
     nodes_y = [un(nodes[i]) for i in range(size)]
-
-    yf = []
     size = 1000
     h = (b - a) / size
     for i in range(size + 1):
         x = a + h * i
         xs.append(x)
         ys.append(un(x))
-        yf.append(u_real(x))
-    plt.plot(xs, ys, 'b', xs, yf, 'g--', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
+    plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
     h = nodes[-1] - nodes[0]
     plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
     h = nodes[-1] - nodes[0]
@@ -172,23 +216,36 @@ app = QApplication(sys.argv)
 
 listView = QTableWidget()
 listView.setRowCount(len(states))
-listView.setColumnCount(7)
+listView.setColumnCount(9)
 listView.setHorizontalHeaderItem(0, QTableWidgetItem("Size"))
 listView.setHorizontalHeaderItem(1, QTableWidgetItem("Uh_L"))
 listView.setHorizontalHeaderItem(2, QTableWidgetItem("e_L"))
 listView.setHorizontalHeaderItem(3, QTableWidgetItem("||e||L / ||uh||L %"))
-listView.setHorizontalHeaderItem(4, QTableWidgetItem("Uh_H"))
-listView.setHorizontalHeaderItem(5, QTableWidgetItem("e_H"))
-listView.setHorizontalHeaderItem(6, QTableWidgetItem("||e||H / ||uh||H %"))
+listView.setHorizontalHeaderItem(4, QTableWidgetItem("pL"))
+listView.setHorizontalHeaderItem(5, QTableWidgetItem("Uh_H"))
+listView.setHorizontalHeaderItem(6, QTableWidgetItem("e_H"))
+listView.setHorizontalHeaderItem(7, QTableWidgetItem("||e||H / ||uh||H %"))
+listView.setHorizontalHeaderItem(8, QTableWidgetItem("pH"))
 listView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 for i in range(len(states)):
     listView.setItem(i, 0, QTableWidgetItem("{0}".format(states[i].size)))
     listView.setItem(i, 1, QTableWidgetItem("{0:.5}".format(states[i].norm_u)))
     listView.setItem(i, 2, QTableWidgetItem("{0:.5}".format(states[i].e_l)))
     listView.setItem(i, 3, QTableWidgetItem("{0:.5}".format(states[i].e_l / states[i].norm_u * 100)))
-    listView.setItem(i, 4, QTableWidgetItem("{0:.5}".format(states[i].derivative_norm_u)))
-    listView.setItem(i, 5, QTableWidgetItem("{0:.5}".format(states[i].e_h)))
-    listView.setItem(i, 6, QTableWidgetItem("{0:.5}".format(states[i].e_h / states[i].derivative_norm_u * 100)))
+    listView.setItem(i, 5, QTableWidgetItem("{0:.5}".format(states[i].derivative_norm_u)))
+    listView.setItem(i, 6, QTableWidgetItem("{0:.5}".format(states[i].e_h)))
+    listView.setItem(i, 7, QTableWidgetItem("{0:.5}".format(states[i].e_h / states[i].derivative_norm_u * 100)))
+    p_h = ""
+    p_l = ""
+    if i > 0:
+        # p_h = (numpy.log(states[0].e_h) - numpy.log(states[i].e_h)) / (numpy.log(states[i].size) - numpy.log(states[0].size))
+        # p_l = (numpy.log(states[0].e_l) - numpy.log(states[i].e_l)) / (numpy.log(states[i].size) - numpy.log(states[0].size))
+        # p_h = numpy.log(states[i].e_h - states[i - 1].e_h) / numpy.log(states[i].size - states[i - 1].size)
+        # p_l = numpy.log(states[i].e_l - states[i - 1].e_l) / numpy.log(states[i].size - states[i - 1].size)
+        p_h = numpy.log(states[i - 1].e_h / states[i].e_h) / numpy.log(states[i].size / states[i - 1].size)
+        p_l = numpy.log(states[i - 1].e_l / states[i].e_l) / numpy.log(states[i].size / states[i - 1].size)
+    listView.setItem(i, 8, QTableWidgetItem("{0:.5}".format(p_h)))
+    listView.setItem(i, 4, QTableWidgetItem("{0:.5}".format(p_l)))
 listView.doubleClicked.connect(draw)
 listView.setWindowState(QtCore.Qt.WindowMaximized)
 listView.show()
