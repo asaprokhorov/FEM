@@ -122,19 +122,19 @@ def even_fem(f, p, q, r, alpha, beta, A, B, a, b, states):
 
 
 #good
-p = lambda x: 1
-q = lambda x: 10**3 * (1 - x ** 7)
-r = lambda x: -10**3
-alpha = 10 ** 12
-beta = 10 ** 12
-a = -1
-b = 1
-A = 0
-B = 0
-
-
-def func(x):
-    return 1000
+# p = lambda x: 1
+# q = lambda x: 10**3 * (1 - x ** 7)
+# r = lambda x: -10**3
+# alpha = 10 ** 12
+# beta = 10 ** 12
+# a = -1
+# b = 1
+# A = 0
+# B = 0
+#
+#
+# def func(x):
+#     return 1000
 
 #good
 # p = lambda x: 1
@@ -153,19 +153,19 @@ def func(x):
 
 #good
 
-# p = lambda x: 1
-# q = lambda x: 3000 * (2/3 - x)
-# r = lambda x: 0
-# alpha = 10 ** 12
-# beta = 10 ** 12
-# a = 0
-# b = 1
-# A = 0
-# B = 0
-#
-#
-# def func(x):
-#     return 3000
+p = lambda x: -1
+q = lambda x: 0
+r = lambda x: 7
+alpha = 1
+beta = 1
+a = -1
+b = 1
+A = -4
+B = -2
+
+
+def func(x):
+    return 7 * x ** 3 - 6 * x
 
 # p = lambda x: 1
 # q = lambda x: numpy.exp(6*x)
@@ -187,8 +187,8 @@ basis = create_basis(nodes)
 
 states = []
 
-# h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
-even_fem(func, p, q, r, alpha, beta, A, B, a, b, states)
+h_adaptive_fem(func, p, q, r, alpha, beta, A, B, basis, nodes, 0.1, states)
+# even_fem(func, p, q, r, alpha, beta, A, B, a, b, states)
 
 def draw(row):
     xs = []

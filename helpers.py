@@ -84,3 +84,15 @@ def create_bubble_basis(nodes):
     for i in range(size):
         basis.append(create_single_bubble_basis(i, nodes))
     return basis
+
+
+class State:
+    def __init__(self, size, norm_u, e_l, derivative_norm_u, e_h, func, nodes):
+        self.size = size
+        self.norm_u = norm_u
+        self.e_l = e_l
+        self.derivative_norm_u = derivative_norm_u
+        self.e_h = e_h
+        self.function = func
+        self.nodes = nodes
+
