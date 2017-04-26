@@ -34,7 +34,7 @@ def _calculate_vector_element(i, nodes, phi, sigma, f, alpha):
     xi_left = nodes[i - 1] if i > 0 else nodes[i]
     xi_right = nodes[i + 1] if i < len(nodes) - 1 else nodes[i]
     return integrate.quad(lambda x: f(x) * phi[i](x, True) / sigma(x), xi_left, xi_right)[0] + alpha * phi[i](
-        nodes[-1]) * f(nodes[-1]) / sigma(nodes[-1]) ** 2
+        nodes[-1], True) * f(nodes[-1]) / sigma(nodes[-1]) ** 2
 
 
 def _create_matrix(nodes, phi, m, sigma, f, alpha, _u):
@@ -51,11 +51,13 @@ def _create_matrix(nodes, phi, m, sigma, f, alpha, _u):
         b[i] = _calculate_vector_element(i, nodes, phi, sigma, f, alpha)
     return matrix, b
 
+
 def solve_fem(m, sigma, f, alpha, _u, nodes):
     phi = create_basis(nodes)
     matrix, b = _create_matrix(nodes=nodes, phi=phi, m=m, sigma=sigma, f=f, alpha=alpha,
                                _u=_u)
     solution = linalg.solve(matrix, b)
+    # print(solution)
     return lambda x: sum([phi[i](x) * solution[i] for i in range(len(solution))])
 
 

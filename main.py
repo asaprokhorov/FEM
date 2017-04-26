@@ -9,19 +9,20 @@ import sys
 a = 0
 b = 1
 
-nodes = numpy.linspace(a, b, 3, endpoint=True)
-
-m = lambda x: 1
-sigma = lambda x: 1
-f = lambda x: x ** 2 - 2
-_u = -1
-alpha = -1
+nodes = numpy.linspace(a, b, 50, endpoint=True)
 
 # m = lambda x: 1
 # sigma = lambda x: 1
-# f = lambda x: (1 + numpy.pi ** 2) * numpy.sin(numpy.pi * x)
-# _u = -numpy.pi
+# f = lambda x: x ** 2 - 2
+# _u = 3
 # alpha = 1
+
+m = lambda x: 1
+sigma = lambda x: 1
+f = lambda x: (1 + numpy.pi ** 2) * numpy.sin(numpy.pi * x)
+_u = -numpy.pi
+alpha = 1
+
 
 accuracy = 0.01
 
@@ -48,7 +49,6 @@ def draw(row):
     plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
     h = nodes[-1] - nodes[0]
     plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
-    h = nodes[-1] - nodes[0]
     plt.show()
 
 # ui pyqt

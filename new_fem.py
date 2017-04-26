@@ -19,7 +19,7 @@ def _calculate_matrix_row_elements(i, nodes, basis, m, sigma, alpha):
             xi_left, xi)[0]
     ci = integrate.quad(
         lambda x: m(x) * phi_i(x, True) ** 2 + sigma(x) * phi_i(x) ** 2, xi_left, xi_right
-    )[0] + alpha * phi_i(nodes[-1]) ** 2
+    )[0] + alpha * phi_i(nodes[-1]) ** 2 - alpha * m(nodes[0]) * phi_i(nodes[0]) * phi_i(nodes[0], True)
     ci_right = None
     if phi_i_right:
         ci_right = integrate.quad(
@@ -49,6 +49,8 @@ def _create_matrix(nodes, basis, m, sigma, f, alpha, _u):
         if ci_right:
             matrix[i][i + 1] = ci_right
         b[i] = _calculate_vector_element(i, nodes, basis, f, alpha, _u)
+        matrix[0][1] = 0
+        b[0] = 0
     return matrix, b
 
 
