@@ -13,11 +13,11 @@ b = 1
 
 nodes = numpy.linspace(a, b, 3, endpoint=True)
 
-m = lambda x: 1
-sigma = lambda x: 1
-f = lambda x: x#x ** 2 - 2
-_u = 3
-alpha = 1
+# m = lambda x: 1
+# sigma = lambda x: 1
+# f = lambda x: x ** 2 - 2
+# _u = 3
+# alpha = 1
 
 # m = lambda x: 1
 # sigma = lambda x: 1
@@ -25,8 +25,14 @@ alpha = 1
 # _u = -numpy.pi
 # alpha = 1
 
+m = lambda x: 1
+sigma = lambda x: 1000
+f = lambda x: 1000
+_u = 0
+alpha = 10e7
 
-accuracy = 0.1
+
+accuracy = 0.05
 
 states = []
 
@@ -40,9 +46,12 @@ def draw_error(row):
     fn = states[row.row()].fn
     size = states[row.row()].size
     errors = states[row.row()].errors
+    errors_h = states[row.row()].errors_h
     xs = []
     ys = []
     nodes_y = []
+    nodes_e = []
+    e_s = []
     for i in range(size - 1):
         x = nodes[i]
         xs.append(x)
@@ -50,8 +59,12 @@ def draw_error(row):
         ys.append(errors[i])
         ys.append(errors[i])
         nodes_y.append(errors[i])
+        nodes_e.append(errors_h[i])
+        e_s.append(errors_h[i])
+        e_s.append(errors_h[i])
     nodes_y.append(nodes_y[-1])
-    plt.plot(xs, ys, 'b', nodes, nodes_y, 'rs')
+    nodes_e.append(nodes_e[-1])
+    plt.plot(xs, ys, 'b', nodes, nodes_y, 'rs', xs, e_s, 'g', nodes, nodes_e, 'y^')
     h = nodes[-1] - nodes[0]
     plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
     plt.show()
@@ -95,13 +108,14 @@ app = QApplication(sys.argv)
 
 listView = QTableWidget()
 listView.setRowCount(len(states))
-listView.setColumnCount(5)
+listView.setColumnCount(6)
 # size, solution, dual_solution, nodes, norm, dual, fn, error
 listView.setHorizontalHeaderItem(0, QTableWidgetItem("Size"))
 listView.setHorizontalHeaderItem(1, QTableWidgetItem("||u_h||"))
 listView.setHorizontalHeaderItem(2, QTableWidgetItem("||phi_h||"))
 listView.setHorizontalHeaderItem(3, QTableWidgetItem("||f||"))
 listView.setHorizontalHeaderItem(4, QTableWidgetItem("error"))
+listView.setHorizontalHeaderItem(5, QTableWidgetItem("error estimator"))
 # print("""
 # \\begin{table}[H]
 # \\centering
@@ -115,6 +129,7 @@ for i in range(len(states)):
     listView.setItem(i, 2, QTableWidgetItem("{0:.5}".format(sum(states[i].dual))))
     listView.setItem(i, 3, QTableWidgetItem("{0:.5}".format(states[i].fn)))
     listView.setItem(i, 4, QTableWidgetItem("{0:.5}".format(states[i].error)))
+    listView.setItem(i, 5, QTableWidgetItem("{0:.5}".format(states[i].errors_by_estimator)))
 # print("""
 # \\end{tabular}
 # \\caption{Характеристики апроксимацiї на рівномірній сiтцi.}
