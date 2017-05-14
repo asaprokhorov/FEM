@@ -88,7 +88,8 @@ def create_bubble_basis(nodes):
 
 
 class State:
-    def __init__(self, size, solution, dual_solution, nodes, norm, dual, fn, error, f_norms, errors, errors_by_estimator, errors_h):
+    def __init__(self, size, solution, dual_solution, nodes, norm, dual, fn, error, f_norms, errors,
+                 errors_by_estimator, errors_h):
         self.size = size
         self.solution = solution
         self.dual_solution = dual_solution
@@ -102,18 +103,26 @@ class State:
         self.errors_by_estimator = errors_by_estimator
         self.errors_h = errors_h
 
-def new_norm(m, sigma, alpha, solution, a, b, end):
+
+def new_norm(m, beta, sigma, alpha, solution, a, b, end):
     last = alpha * solution(end) ** 2 if b == end else 0
-    return integrate.quad(lambda x: m(x) * derivative(solution, x, dx=1e-6) ** 2 + sigma(x) * solution(x) ** 2, a, b)[
+    return integrate.quad(
+        lambda x: m(x) * derivative(solution, x, dx=1e-6) ** 2 + beta(x) * derivative(solution, x, dx=1e-6) * solution(
+            x) + sigma(x) * solution(x) ** 2, a, b)[
                0] + last
 
 
 def f_norm(sigma, f, alpha, _u, a, b, end):
-    last = _u ** 2 * alpha if b == end else 0
+    last = -_u ** 2 * alpha if b == end else 0
     return integrate.quad(lambda x: f(x) ** 2 / sigma(x), a, b)[0] + last
 
 
-def dual_norm(m, sigma, alpha, solution, a, b, end):
-    last = solution(end) ** 2 / alpha if b == end else 0
-    return integrate.quad(lambda x: solution(x) ** 2 / m(x) + derivative(solution, x, dx=1e-6) ** 2 / sigma(x), a, b)[
+def dual_norm(m, beta, sigma, f, alpha, _u, solution, a, b, end):
+    last = solution(end) ** 2 / alpha + 2 * solution(end) * _u if b == end else 0
+    return integrate.quad(lambda x: solution(x) ** 2 / m(x) - beta(x) * solution(x) * (
+        f(x) - derivative(solution, x, dx=1e-6) + beta(x) * solution(x) / m(x)) / (m(x) * sigma(x))
+                                    + ((beta(x) * solution(x) / m(x) - derivative(solution, x, dx=1e-6)) ** 2 - 2 * f(x)
+                                       * derivative(solution, x, dx=1e-6) + 2 * beta(x) * f(x) * solution(x) / m(
+        x)) / sigma(x)
+                          , a, b)[
                0] + last

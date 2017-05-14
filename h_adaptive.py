@@ -68,10 +68,10 @@ def draw(state):
 #         return h_adaptive_fem(m, sigma, f, alpha, _u, new_nodes, accuracy, states)
 #     return states
 
-def h_adaptive_fem(m, sigma, f, alpha, _u, nodes, accuracy, states):
-    solution = solve_fem(m=m, sigma=sigma, f=f, alpha=alpha, _u=_u, nodes=nodes)
-    dual_solution = solve_dual_fem(m, sigma, f, alpha, _u, nodes)
-    error_solution = solve_error(m, sigma, f, alpha, _u, nodes, solution)
+def h_adaptive_fem(m, beta, sigma, f, alpha, _u, nodes, accuracy, states):
+    solution = solve_fem(m=m, beta=beta, sigma=sigma, f=f, alpha=alpha, _u=_u, nodes=nodes)
+    dual_solution = solve_dual_fem(m, beta, sigma, f, alpha, _u, nodes)
+    error_solution = solve_error(m, beta, sigma, f, alpha, _u, nodes, solution)
 
     straight_norms = []
     error_norms = []
@@ -84,15 +84,15 @@ def h_adaptive_fem(m, sigma, f, alpha, _u, nodes, accuracy, states):
     error_norm_full = 0
     errors_with_dual = []
     for i in range(size):
-        e = new_norm(m, sigma, alpha, error_solution, nodes[i], nodes[i + 1], nodes[-1])
+        e = new_norm(m, beta, sigma, alpha, error_solution, nodes[i], nodes[i + 1], nodes[-1])
         error_norms.append(e)
         error_norm_full += e
 
-        norm = new_norm(m, sigma, alpha, solution, nodes[i], nodes[i + 1], nodes[-1])
+        norm = new_norm(m, beta, sigma, alpha, solution, nodes[i], nodes[i + 1], nodes[-1])
         straight_norms.append(norm)
         norm_full += norm
 
-        dual = dual_norm(m, sigma, alpha, dual_solution, nodes[i], nodes[i + 1], nodes[-1])
+        dual = dual_norm(m, beta, sigma, f, alpha, _u, dual_solution, nodes[i], nodes[i + 1], nodes[-1])
         dual_norms.append(dual)
         fn = f_norm(sigma, f, alpha, _u, nodes[i], nodes[i + 1], nodes[-1])
         f_norms.append(fn)
@@ -117,6 +117,6 @@ def h_adaptive_fem(m, sigma, f, alpha, _u, nodes, accuracy, states):
     errors_by_estimator =  sum(errors)
     new_state = State(size + 1, solution, dual_solution, nodes, straight_norms, dual_norms, fn_full, error, f_norms, errors_with_dual, error_norm_full, errors)
     states.append(new_state)
-    if len(nodes) < len(new_nodes)and len(nodes) < 150:
-        return h_adaptive_fem(m, sigma, f, alpha, _u, new_nodes, accuracy, states)
+    if len(nodes) < len(new_nodes) and len(nodes) < 600:
+        return h_adaptive_fem(m, beta, sigma, f, alpha, _u, new_nodes, accuracy, states)
     return states
