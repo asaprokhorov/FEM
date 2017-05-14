@@ -25,18 +25,40 @@ nodes = numpy.linspace(a, b, 3, endpoint=True)
 # _u = -numpy.pi
 # alpha = 1
 
+# m = lambda x: 1
+# sigma = lambda x: 1000
+# f = lambda x: 1000
+# _u = 0
+# alpha = 1e7
+# beta = lambda x: 0
+
+# #good
+# m = lambda x: 1
+# beta = lambda x: 10**3 * (1 - x ** 7)
+# sigma = lambda x: -10**3
+# alpha = 10 ** 12
+# _u = 0
+# a = 0
+# b = 1
+# def f(x):
+#     return 1000
+
 m = lambda x: 1
-sigma = lambda x: 1000
-f = lambda x: 1000
-_u = 0
-alpha = 10e7
+beta = lambda x: 1
+sigma = lambda x: 1
+alpha = 1
+_u = 3
+a = 0
+b = 1
+f = lambda x : x ** 2  + 2 * x - 2
 
 
-accuracy = 0.05
+
+accuracy = 0.20
 
 states = []
 
-states = h_adaptive_fem(m, sigma, f, alpha, _u, nodes, accuracy, states)
+states = h_adaptive_fem(m, sigma, f, alpha, beta, _u, nodes, accuracy, states)
 
 def draw_error(row):
     f_norms = states[row.row()].f_norms
@@ -98,7 +120,7 @@ def draw(row):
         xs.append(x)
         ys.append(un(x))
         yds.append(dual(x))
-    plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', xs, yds, 'g', nodes, nodes_yd, 'g^', nodes, nodes_0, 'rs')
+    plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
     h = nodes[-1] - nodes[0]
     plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
     plt.show()
@@ -135,7 +157,7 @@ for i in range(len(states)):
 # \\caption{Характеристики апроксимацiї на рівномірній сiтцi.}
 # \\end{table}
 # """)
-listView.doubleClicked.connect(draw_error)
+listView.doubleClicked.connect(draw)
 listView.setWindowState(QtCore.Qt.WindowMaximized)
 listView.show()
 sys.exit(app.exec_())

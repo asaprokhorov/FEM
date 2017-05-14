@@ -3,7 +3,7 @@ from scipy.misc import derivative
 from numpy import zeros, linalg, sqrt, pi
 from helpers import create_basis, create_bubble_basis, State
 
-def _calculate_matrix_row_elements(i, nodes, phi, m, sigma, alpha):
+def _calculate_matrix_row_elements(i, nodes, phi, m, sigma, alpha, beta):
     xi_left = nodes[i - 1] if i > 0 else nodes[i]
     xi = nodes[i]
     xi_right = nodes[i + 1] if i < len(nodes) - 1 else nodes[i]
@@ -37,12 +37,12 @@ def _calculate_vector_element(i, nodes, phi, sigma, f, alpha, _u):
         nodes[-1]) * _u
 
 
-def _create_matrix(nodes, phi, m, sigma, f, alpha, _u):
+def _create_matrix(nodes, phi, m, sigma, f, alpha, beta, _u):
     size = len(nodes)
     matrix = zeros((size, size))
     b = zeros(size)
     for i in range(size):
-        ci_left, ci, ci_right = _calculate_matrix_row_elements(i, nodes, phi, m, sigma, alpha)
+        ci_left, ci, ci_right = _calculate_matrix_row_elements(i, nodes, phi, m, sigma, alpha, beta)
         if ci_left:
             matrix[i][i - 1] = ci_left
         matrix[i][i] = ci
@@ -52,9 +52,9 @@ def _create_matrix(nodes, phi, m, sigma, f, alpha, _u):
     return matrix, b
 
 
-def solve_fem(m, sigma, f, alpha, _u, nodes):
+def solve_fem(m, sigma, f, alpha, beta, _u, nodes):
     phi = create_basis(nodes)
-    matrix, b = _create_matrix(nodes=nodes, phi=phi, m=m, sigma=sigma, f=f, alpha=alpha,
+    matrix, b = _create_matrix(nodes=nodes, phi=phi, m=m, sigma=sigma, f=f, alpha=alpha, beta=beta,
                                _u=_u)
     solution = linalg.solve(matrix, b)
     return lambda x: sum([phi[i](x) * solution[i] for i in range(len(solution))])
