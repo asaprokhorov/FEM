@@ -88,21 +88,19 @@ def create_bubble_basis(nodes):
 
 
 class State:
-    def __init__(self, size, solution, dual_solution, nodes, norm, dual, fn, error, f_norms, errors,
-                 errors_by_estimator, errors_h):
+    def __init__(self, size, solution, dual_solution, nodes,
+                 straight_norms, dual_norms, dual_norm, f_norms,
+                 error_norms, fn):
         self.size = size
         self.solution = solution
         self.dual_solution = dual_solution
-        self.norm = norm
-        self.dual = dual
-        self.fn = fn
-        self.error = error
+        self.straight_norms = straight_norms
+        self.dual_norms = dual_norms
+        self.dual_norm = dual_norm
         self.nodes = nodes
         self.f_norms = f_norms
-        self.errors = errors
-        self.errors_by_estimator = errors_by_estimator
-        self.errors_h = errors_h
-
+        self.error_norms = error_norms
+        self.fn = fn
 
 def new_norm(m, beta, sigma, alpha, solution, a, b, end):
     last = alpha * solution(end) ** 2 if b == end else 0

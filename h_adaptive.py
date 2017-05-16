@@ -68,7 +68,7 @@ def draw(state):
 #         return h_adaptive_fem(m, sigma, f, alpha, _u, new_nodes, accuracy, states)
 #     return states
 
-def h_adaptive_fem(m, beta, sigma, f, alpha, _u, nodes, accuracy, states):
+def h_adaptive_fem(m, beta, sigma, f, alpha, _u, nodes, accuracy, states, even=False):
     solution = solve_fem(m=m, beta=beta, sigma=sigma, f=f, alpha=alpha, _u=_u, nodes=nodes)
     dual_solution = solve_dual_fem(m, beta, sigma, f, alpha, _u, nodes)
     error_solution = solve_error(m, beta, sigma, f, alpha, _u, nodes, solution)
@@ -102,21 +102,21 @@ def h_adaptive_fem(m, beta, sigma, f, alpha, _u, nodes, accuracy, states):
 
     new_nodes = []
     errors = []
+    needs_repeat = False
     for i in range(size):
         new_nodes.append(nodes[i])
         error = sqrt(size * error_norms[i] / (norm_full + error_norm_full))
         errors.append(error)
-        if (error > accuracy):
+        if error > accuracy:
+            needs_repeat = True
+        if error > accuracy or even:
             new_nodes.append((nodes[i] + nodes[i + 1]) / 2)
 
     new_nodes.append(nodes[-1])
-
-    fn_full = f_norm(sigma, f, alpha, _u, nodes[0], nodes[-1], nodes[-1])
-
-    error = sqrt(abs(fn_full - (sum(straight_norms) + sum(dual_norms))) / fn_full)
-    errors_by_estimator =  sum(errors)
-    new_state = State(size + 1, solution, dual_solution, nodes, straight_norms, dual_norms, fn_full, error, f_norms, errors_with_dual, error_norm_full, errors)
+    dual = dual_norm(m, beta, sigma, f, alpha, _u, dual_solution, nodes[0], nodes[-1], nodes[-1])
+    fn = f_norm(sigma, f, alpha, _u, nodes[0], nodes[-1], nodes[-1])
+    new_state = State(size + 1, solution, dual_solution, nodes, straight_norms, dual_norms, dual, f_norms, error_norms, fn)
     states.append(new_state)
-    if len(nodes) < len(new_nodes) and len(nodes) < 100:
-        return h_adaptive_fem(m, beta, sigma, f, alpha, _u, new_nodes, accuracy, states)
+    if needs_repeat and len(nodes) < 100:
+        return h_adaptive_fem(m, beta, sigma, f, alpha, _u, new_nodes, accuracy, states, even)
     return states
