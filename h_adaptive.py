@@ -117,6 +117,6 @@ def h_adaptive_fem(m, beta, sigma, f, alpha, _u, nodes, accuracy, states):
     errors_by_estimator =  sum(errors)
     new_state = State(size + 1, solution, dual_solution, nodes, straight_norms, dual_norms, fn_full, error, f_norms, errors_with_dual, error_norm_full, errors)
     states.append(new_state)
-    if len(nodes) < len(new_nodes) and len(nodes) < 600:
+    if len(nodes) < len(new_nodes) and len(nodes) < 100:
         return h_adaptive_fem(m, beta, sigma, f, alpha, _u, new_nodes, accuracy, states)
     return states

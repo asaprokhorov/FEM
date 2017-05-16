@@ -113,16 +113,12 @@ def new_norm(m, beta, sigma, alpha, solution, a, b, end):
 
 
 def f_norm(sigma, f, alpha, _u, a, b, end):
-    last = -_u ** 2 * alpha if b == end else 0
+    last = _u ** 2 * alpha if b == end else 0
     return integrate.quad(lambda x: f(x) ** 2 / sigma(x), a, b)[0] + last
 
 
 def dual_norm(m, beta, sigma, f, alpha, _u, solution, a, b, end):
-    last = solution(end) ** 2 / alpha + 2 * solution(end) * _u if b == end else 0
-    return integrate.quad(lambda x: solution(x) ** 2 / m(x) - beta(x) * solution(x) * (
-        f(x) - derivative(solution, x, dx=1e-6) + beta(x) * solution(x) / m(x)) / (m(x) * sigma(x))
-                                    + ((beta(x) * solution(x) / m(x) - derivative(solution, x, dx=1e-6)) ** 2 - 2 * f(x)
-                                       * derivative(solution, x, dx=1e-6) + 2 * beta(x) * f(x) * solution(x) / m(
-        x)) / sigma(x)
-                          , a, b)[
-               0] + last
+    last = solution(end) ** 2 / alpha if b == end else 0
+    return integrate.quad(lambda x: (solution(x) ** 2) / m(x) + (derivative(solution, x, dx=1e-6) ** 2) / sigma(x)
+                                     - beta(x) * solution(x) * derivative(solution, x, dx=1e-6) / (m(x) * sigma(x))
+                          , a, b)[0] + last

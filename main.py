@@ -21,28 +21,45 @@ nodes = numpy.linspace(a, b, 3, endpoint=True)
 # alpha = 1
 
 # m = lambda x: 1
+# beta = lambda x: 1
 # sigma = lambda x: 1
-# f = lambda x: (1 + numpy.pi ** 2) * numpy.sin(numpy.pi * x)
+# f = lambda x: (1 + numpy.pi ** 2) * numpy.sin(numpy.pi * x) + numpy.pi * numpy.cos(numpy.pi * x)
 # _u = -numpy.pi
 # alpha = 1
 
 # m = lambda x: 1
 # sigma = lambda x: 1000
 # f = lambda x: 1000
-# _u = 0
+# _u = 0# m = lambda x: 1
+# beta = lambda x: 1
+# sigma = lambda x: 1
+# f = lambda x: (1 + numpy.pi ** 2) * numpy.sin(numpy.pi * x) + numpy.pi * numpy.cos(numpy.pi * x)
+# _u = -numpy.pi
+# alpha = 1
+
 # alpha = 10e7
 
+# m = lambda x: 1
+# beta = lambda x: 10**3 * (1 - x ** 7)
+# sigma = lambda x: 10**3
+# alpha = 10 ** 12
+# _u = 0
+# a = 0
+# b = 1
+#
+# f = lambda x: 1000
+
 m = lambda x: 1
-beta = lambda x: 10**3 * (1 - x ** 7)
-sigma = lambda x: 10**3
+beta = lambda x: 3000 * (2/3 - x)
+sigma = lambda x: 1
 alpha = 10 ** 12
 _u = 0
 a = 0
 b = 1
 
-f = lambda x: 1000
+f = lambda x: 3000
 
-accuracy = 0.1
+accuracy = 0.01
 
 states = []
 
@@ -108,7 +125,8 @@ def draw(row):
         xs.append(x)
         ys.append(un(x))
         yds.append(dual(x))
-    plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
+    plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', xs, yds, 'g', nodes, nodes_yd, 'g^', nodes, nodes_0, 'rs')
+    # plt.plot(xs, ys, 'b', nodes, nodes_y, 'b^', nodes, nodes_0, 'rs')
     h = nodes[-1] - nodes[0]
     plt.xlim([nodes[0] - 0.05 * h, nodes[-1] + 0.05 * h])
     plt.show()
